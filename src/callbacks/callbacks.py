@@ -13,6 +13,8 @@ import os
 import csv
 import torch
 import logging
+from torchvision.utils import save_image
+import psutil
 
 log = logging.getLogger(__name__)
 
@@ -246,7 +248,7 @@ class BatchLossLogger(Callback):
         info = trainer.loss_batch
         epoch, batch_idx = info["epoch"], info["batch_idx"]
 
-        # Detect trainer type and extract losses accordingly
+        # Detect trainer type and extract losses
         if trainer.__class__.__name__ == "AdversarialTrainer":
             loss_g = info.get("loss_g")
             loss_d = info.get("loss_d")
@@ -282,7 +284,7 @@ class BatchLossLogger(Callback):
 
 
 class EpochLossCSVLogger(Callback):
-    """Logs epoch-wise train and validation losses for both Trainer and AdversarialTrainer."""
+    """Logs epoch train and validation losses for both Trainer and AdversarialTrainer."""
 
     def __init__(self, output_dir):
         self.output_dir = output_dir
@@ -371,11 +373,6 @@ class GradientClippingLogger(Callback):
             f"[GradientClippingLogger] Gradient norm after clipping: {total_norm:.4f}"
         )
 
-# src/callbacks/image_callback.py
-import os
-import torch
-from torchvision.utils import save_image
-
 
 class ImageCallback(Callback):
     def __init__(self, output_dir, every_n_epochs=5, n_samples=16, use_dict= False):
@@ -410,10 +407,6 @@ class ImageCallback(Callback):
         )
 
 
-# callbacks/memory_monitor.py
-import logging
-import torch
-import psutil
 
 log = logging.getLogger(__name__)
 
@@ -433,9 +426,7 @@ class MemoryMonitorCallback(Callback):
         self.interval = interval
         self.process = psutil.Process()
 
-    # ---------------------------------------------------------------------
-    # Hooks used by Trainer
-    # ---------------------------------------------------------------------
+
     def on_train_begin(self, trainer):
         log.info("[Memory] Monitoring started")
 
@@ -455,9 +446,7 @@ class MemoryMonitorCallback(Callback):
     def on_train_end(self, trainer):
         log.info("[Memory] Monitoring stopped")
 
-    # ---------------------------------------------------------------------
-    # Internal helper
-    # ---------------------------------------------------------------------
+
     def _log_memory(self, prefix: str):
         # GPU memory
         if torch.cuda.is_available():

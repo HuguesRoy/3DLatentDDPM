@@ -1,0 +1,21 @@
+
+defaults:
+  - latent_dim: 64
+  - network/3D_encoder@encoder
+  - network/3D_decoder@decoder
+  - network/prior_network@prior_network
+
+_target_: multivae.models.CVAE
+
+model_config:
+  _target_: multivae.models.CVAEConfig
+  main_modality: pet_linear
+  latent_dim: ${latent_dim}
+  decoder_dist: normal
+  beta: 10.0
+  sigma_variation: null
+  sparse: False
+  log_sigma_init: -2.0
+  log_alpha_init: 0.0
+  mean_over_batch: False
+

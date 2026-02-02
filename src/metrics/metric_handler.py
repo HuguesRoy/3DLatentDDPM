@@ -1,6 +1,7 @@
 import pandas as pd
 import math
 import logging
+import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -83,16 +84,14 @@ class MetricHandler:
                 result["index"] = sample_indices[i]
             self.per_sample_results.append(result)
 
-
     def compute(self):
         results = {}
         for name, values in self.metrics.items():
             if not values:
                 results[name] = {"mean": None, "std": None}
             else:
-                mean = sum(values) / len(values)
-                variance = sum((v - mean) ** 2 for v in values) / len(values)
-                std = math.sqrt(variance)
+                mean = np.nanmean(values)
+                std = np.nanstd(values)
                 results[name] = {"mean": mean, "std": std}
         return results
 

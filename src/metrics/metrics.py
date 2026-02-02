@@ -29,13 +29,11 @@ def compute_dice(preds: np.ndarray, targets: np.ndarray) -> float:
     pred_sum = preds.sum()
     target_sum = targets.sum()
 
-    # Case 1: both empty → perfect match
     if pred_sum == 0 and target_sum == 0:
-        return 1.0
+        return np.nan
 
-    # Case 2: one empty → total mismatch
     if pred_sum == 0 or target_sum == 0:
-        return 0.0
+        return np.nan
 
     # Case 3: normal Dice
     intersection = preds[targets == 1].sum()
@@ -69,9 +67,8 @@ class AveragePrecision:
         pred = pred[valid_mask]
         target = target[valid_mask]
 
-        # Case 1: GT contains no positives → AP = 1.0 (perfect)
         if np.sum(target) == 0:
-            return 1.0
+            return np.nan
 
         # Compute AP normally
         ap = average_precision_score(target, pred)

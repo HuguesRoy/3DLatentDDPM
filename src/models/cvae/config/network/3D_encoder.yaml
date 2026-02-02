@@ -1,0 +1,11 @@
+_target_: mvae_ad.architectures.Encoder3d
+latent_dim: ${latent_dim}
+n_blocks: 5
+n_subblocks: 1
+activation: relu
+block: conv
+joint_network: null
+cond_mod_network: null
+hidden_dims: [128]
+joint_layers : [128]
+

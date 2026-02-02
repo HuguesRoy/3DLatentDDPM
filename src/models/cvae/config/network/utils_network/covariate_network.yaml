@@ -1,0 +1,6 @@
+_target_: mvae_ad.architectures.CovariatesNetwork
+_partial_: true
+
+cond_modds: ${data.txt_modalities}
+input_dim: ${data.txt_dim}
+hidden_dims: ${model.encoder.hidden_dims}

@@ -1,0 +1,7 @@
+_target_: mvae_ad.architectures.JointEncoder
+
+latent_dim: ${model.latent_dim}
+dim_covars: null
+cond_mods: ${data.txt_modalities}
+input_dim: ${data.txt_dim}
+hidden_dims: ${model.encoder.hidden_dims}

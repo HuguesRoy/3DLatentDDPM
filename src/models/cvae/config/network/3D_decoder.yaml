@@ -1,0 +1,10 @@
+_target_: mvae_ad.architectures.Decoder3d
+latent_dim: ${model.latent_dim}
+n_blocks: 5
+n_subblocks: 1
+activation: relu
+block: conv
+last_conv: True
+merge_method: concat
+output_decoder_actv: identity
+cond_mod_network: null
