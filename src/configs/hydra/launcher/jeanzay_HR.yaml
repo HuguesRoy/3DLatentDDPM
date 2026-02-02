@@ -1,0 +1,18 @@
+
+submitit_folder: ${hydra.sweep.dir}/.submitit/%j
+timeout_min: null
+gpus_per_task: 1 
+gpus_per_node: 1
+tasks_per_node: 1
+nodes: 1
+name: ${hydra.job.name}
+_target_: hydra_plugins.hydra_submitit_launcher.submitit_launcher.SlurmLauncher
+constraint: a100
+exclude: null
+gres: gpu:1
+cpus_per_gpu: 10
+account: kwn@a100
+signal_delay_s: 600
+qos: qos_gpu_a100-t3
+additional_parameters:
+  time: "20:00:00" # "00:10:00"

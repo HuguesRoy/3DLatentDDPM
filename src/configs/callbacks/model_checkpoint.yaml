@@ -1,0 +1,8 @@
+# configs/callbacks/model_checkpoint.yaml
+
+model_checkpoint:
+  _target_: callbacks.CheckpointCallback
+  # trainer.output_dir will be substituted automatically
+  output_dir: ${trainer.output_dir}  
+  every_n_epochs: 10
+  save_best_only: false

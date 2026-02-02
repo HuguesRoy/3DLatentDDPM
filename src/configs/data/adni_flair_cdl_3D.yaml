@@ -1,0 +1,37 @@
+data_train:
+  _target_: utils.factories.CapsDataset_with_conversion
+  conversion_arg: training_flair 
+
+  caps_directory: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_flair
+  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/adni/FLAIR/final_splits/train.tsv
+
+  preprocessing:
+    _target_: clinicadl.data.datatypes.Custom
+    custom_suffix: space-MNI152NLin2009cSym_res-1x1x1_desc-Crop_desc-SkullStripped_FLAIR
+
+  transforms:
+    _target_: clinicadl.transforms.Transforms
+    image_transforms:
+      - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+        out_min_max: [-1, 1]
+    extraction: 
+      _target_: clinicadl.transforms.extraction.Image
+
+data_val:
+  _target_: utils.factories.CapsDataset_with_conversion
+  conversion_arg: validation_flair 
+
+  caps_directory: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_flair
+  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/adni/FLAIR/final_splits/validation_baseline.tsv
+
+  preprocessing:
+    _target_: clinicadl.data.datatypes.Custom
+    custom_suffix: space-MNI152NLin2009cSym_res-1x1x1_desc-Crop_desc-SkullStripped_FLAIR
+
+  transforms:
+    _target_: clinicadl.transforms.Transforms
+    image_transforms:
+      - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+        out_min_max: [-1, 1]
+    extraction: 
+      _target_: clinicadl.transforms.extraction.Image

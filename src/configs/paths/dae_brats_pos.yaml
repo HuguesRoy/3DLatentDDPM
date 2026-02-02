@@ -1,0 +1,16 @@
+# path to root directory
+# this requires PROJECT_ROOT environment variable to exist
+# you can replace it with "." if you want the root to be the current working directory
+root_dir: ${oc.env:PROJECT_ROOT}
+
+# path to logging directory
+log_dir: ${.root_dir}/logs
+
+output_dir: ${hydra:runtime.output_dir}
+
+# path to working directory
+work_dir: ${hydra:runtime.cwd}
+
+#checkpoint models
+
+model_weight_path: /gpfswork/rech/krk/uup48ab/these/TPAMI_journal/experiments/dae/brats/2025-07-09_19-11-08/checkpoint/model.pth.tar

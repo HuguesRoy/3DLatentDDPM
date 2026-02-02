@@ -1,0 +1,6 @@
+_target_: data.wrappers.ClinicaDLWrapper
+device: ${device}
+image_key: image
+mask_key: null
+seg_key: null
+label_key: null

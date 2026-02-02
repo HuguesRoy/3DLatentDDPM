@@ -1,0 +1,61 @@
+data_train:
+  _target_: utils.factories.CapsDataset_with_conversion
+  conversion_arg: null 
+
+  caps_directory: /lustre/fswork/projects/rech/krk/commun/datasets/brats/BraTS_V2021/caps
+  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/brats_v2021/participant.tsv
+
+  preprocessing:
+    _target_: clinicadl.data.datatypes.FlairLinear
+    use_uncropped_image: false
+
+  transforms:
+    _target_: clinicadl.transforms.Transforms
+    image_transforms:
+      - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+        out_min_max: [-1, 1]
+    extraction: 
+      _target_: clinicadl.transforms.extraction.Slice
+      slice_direction: 2
+      slices:
+        _target_: data.utils.create_slices_cdl
+        first_slice: 50
+        last_slice: 60
+        sep: 1
+    sample_transforms:
+      - _target_: data.preprocessing.SliceResize
+        size:
+          - 128
+          - 128
+        mode: bilinear
+
+data_val:
+  _target_: utils.factories.CapsDataset_with_conversion
+  conversion_arg: null 
+
+  caps_directory: /lustre/fswork/projects/rech/krk/commun/datasets/brats/BraTS_V2021/caps
+  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/brats_v2021/participant.tsv
+
+  preprocessing:
+    _target_: clinicadl.data.datatypes.FlairLinear
+    use_uncropped_image: false
+
+  transforms:
+    _target_: clinicadl.transforms.Transforms
+    image_transforms:
+      - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+        out_min_max: [-1, 1]
+    extraction: 
+      _target_: clinicadl.transforms.extraction.Slice
+      slice_direction: 2
+      slices:
+        _target_: data.utils.create_slices_cdl
+        first_slice: 50
+        last_slice: 60
+        sep: 1
+    sample_transforms:
+      - _target_: data.preprocessing.SliceResize
+        size:
+          - 128
+          - 128
+        mode: bilinear

@@ -1,0 +1,12 @@
+# Wraps a base data wrapper + a transform (e.g. encoder)
+_target_: models.wrappers.TransformWrapper
+
+base_wrapper:
+  _target_: models.wrappers.BratsDataWrapper
+  device: ${device}
+
+transform:
+  _target_: utils.model_loading.load_model_from_config
+  model: ${model}                        # pull from defaults
+  checkpoint: ${paths.vae_checkpoint}    # load weights if available
+  device: ${device}

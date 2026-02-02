@@ -1,0 +1,30 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PROJECT_ROOT}/src/models/dae/configs
+    - file://${oc.env:PROJECT_ROOT}/src/configs
+  run:
+    dir: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/experiments/experiments_1/brats/dae/${now:%Y-%m-%d_%H-%M-%S}
+
+defaults:
+  - _self_
+  - model: dae_all  
+  - trainer: default
+  - data: brats_cdl
+  - callbacks: default
+  - dataloader: clinicadl
+  - optimizer: adam
+  - wrapper: clinicadl
+
+# Override nested list element
+data:
+  data_train:
+    transforms:
+      image_transforms:
+        - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+          out_min_max: [0, 1]
+
+device: cuda
+
+resume:
+  enabled: false
+  checkpoint: null
