@@ -1,5 +1,5 @@
 _target_: mvae_ad.architectures.Encoder3d
-latent_dim: ${latent_dim}
+latent_dim: ${model.model_config.latent_dim}
 n_blocks: 5
 n_subblocks: 1
 activation: relu
