@@ -9,12 +9,13 @@ _target_: multivae.models.CVAE
 model_config:
   _target_: multivae.models.CVAEConfig
   main_modality: pet_linear
-  latent_dim: 64
+  conditioning_modalities: []
+  latent_dim: 256
   decoder_dist: normal
   beta: 10.0
   sigma_variation: null
-  sparse: False
+  sparse: false
   log_sigma_init: -2.0
   log_alpha_init: 0.0
-  mean_over_batch: False
+  mean_over_batch: false
 

@@ -1,0 +1,5 @@
+_target_: models.vp_sde.model.var_schedule.VPLinearSchedule
+beta_min: 0.1
+beta_max: 19.9
+M: 1000
+epsilon: 1e-5

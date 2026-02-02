@@ -1,0 +1,8 @@
+defaults: 
+  - network/1D_unet@network
+  - schedules/vp_linear_schedule@schedule
+
+_target_: models.vp_sde.model.SDE
+
+model_config:
+  loss_type: noise

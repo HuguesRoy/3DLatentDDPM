@@ -1,5 +1,6 @@
 import torch
 from typing import Dict, Optional
+import torch.nn as nn
 
 class BaseWrapper:
     def __call__(self, batch: Dict) -> Dict:
@@ -159,7 +160,7 @@ class ClinicaDLWrapper:
 
 
 class TransformVQVAEWrapper(BaseWrapper):
-    def __init__(self, base_wrapper: BaseWrapper, transform):
+    def __init__(self, base_wrapper: BaseWrapper, transform : nn.Module):
         self.base_wrapper = base_wrapper
         self.transform = transform
 
@@ -172,7 +173,7 @@ class TransformVQVAEWrapper(BaseWrapper):
 
 
 class TransformWrapper(BaseWrapper):
-    def __init__(self, base_wrapper: BaseWrapper, transform):
+    def __init__(self, base_wrapper: BaseWrapper, transform: nn.Module):
         self.base_wrapper = base_wrapper
         self.transform = transform
 
@@ -180,4 +181,21 @@ class TransformWrapper(BaseWrapper):
         data = self.base_wrapper(batch)
         with torch.no_grad():
             data["image"] = self.transform(data["image"])
+        return data
+
+
+class TransformMultiVae(BaseWrapper):
+    def __init__(self, base_wrapper: BaseWrapper, transform: nn.Module):
+        self.base_wrapper = base_wrapper
+        self.transform = transform
+        self.transform = self.transform.encoder
+        self.transform.to(base_wrapper.device)
+        self.transform.eval()
+
+
+    def __call__(self, batch):
+        data = self.base_wrapper(batch)
+        with torch.no_grad():
+            embeddings = (self.transform(data["image"])).embedding
+            data["image"] = embeddings.unsqueeze(1)
         return data

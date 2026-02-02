@@ -5,6 +5,7 @@ n_subblocks: 1
 activation: relu
 block: conv
 last_conv: True
+hidden_dims: [256,32]
 merge_method: concat
 output_decoder_actv: identity
 cond_mod_network: null

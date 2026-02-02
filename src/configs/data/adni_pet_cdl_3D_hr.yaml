@@ -3,7 +3,7 @@ data_train:
   conversion_arg: null 
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/adni/PET/tsv_test/debugging.tsv
+  data: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/splits_dsb/train_cn.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -16,28 +16,17 @@ data_train:
     _target_: clinicadl.transforms.Transforms
     image_transforms:
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
-        out_min_max: [-1, 1]
+        out_min_max: [0, 1]
     extraction: 
-      _target_: clinicadl.transforms.extraction.Slice
-      slice_direction: 0
-      slices:
-        _target_: data.utils.create_slices_cdl
-        first_slice: 20
-        last_slice: 30
-        sep: 2
-    sample_transforms:
-      - _target_: data.preprocessing.SliceResize
-        size:
-          - 128
-          - 128
-        mode: bilinear
+      _target_: clinicadl.transforms.extraction.Image
+
 
 data_val:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: null 
+  conversion_arg: validation_pet 
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/uup48ab/these/journal_bfn/data_preprocessing/adni/PET/tsv_test/debugging.tsv
+  data: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/splits_dsb/validation_cn_baseline.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -50,18 +39,6 @@ data_val:
     _target_: clinicadl.transforms.Transforms
     image_transforms:
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
-        out_min_max: [-1, 1]
+        out_min_max: [0, 1]
     extraction: 
-      _target_: clinicadl.transforms.extraction.Slice
-      slice_direction: 0
-      slices:
-        _target_: data.utils.create_slices_cdl
-        first_slice: 20
-        last_slice: 30
-        sep: 2
-    sample_transforms:
-      - _target_: data.preprocessing.SliceResize
-        size:
-          - 128
-          - 128
-        mode: bilinear
+      _target_: clinicadl.transforms.extraction.Image

@@ -27,16 +27,6 @@ print("torch:", torch.__version__)
 print("cuda version in torch:", torch.version.cuda)
 print("is_available:", torch.cuda.is_available())
 
-
-from hydra import initialize_config_dir, compose
-from hydra.core.global_hydra import GlobalHydra
-from hydra.utils import instantiate
-from pathlib import Path
-from pathlib import Paths
-from omegaconf import OmegaConf
-from hydra.utils import instantiate
-import hydra
-
 def load_callbacks(callbacks_list, cfg):
     """
     Load callback configs from configs/callbacks/<name>.yaml and instantiate them.
