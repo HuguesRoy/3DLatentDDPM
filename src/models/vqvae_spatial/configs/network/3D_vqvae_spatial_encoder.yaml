@@ -1,4 +1,4 @@
-_target_: architectures.architectures3d.Encoder3d
+_target_: models.vqvae_spatial.model.networks.architectures3d.Encoder3d
 latent_dim: ${model.model_config.latent_dim}
 n_blocks: 5
 n_subblocks: 1
