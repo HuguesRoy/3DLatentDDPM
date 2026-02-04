@@ -62,7 +62,7 @@ data_test:
       - _target_: data.preprocessing.Hypometabolism
         mask_dir: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/masks
         pathology: AD
-        percentage: 30
+        percentage: 50
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
         out_min_max: [0, 1]
     extraction: 

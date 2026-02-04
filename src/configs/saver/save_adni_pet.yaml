@@ -4,3 +4,4 @@ output_dir: ${tester.output_dir}
 save_every: 1
 name_map: null
 save_format: npy
+per_sample: true

@@ -3,7 +3,7 @@ _target_: models.vp_sde.predictor.LDPredictor
 
 predictor_config:
   pfode: true
-  time_star: 0.6
+  time_star: 0.5
   inference_steps: 200
   device: ${device}
 
@@ -12,7 +12,7 @@ diffusion_model:
   cfg_path: ${diffusion_model_cfg}                        # pull from defaults
   checkpoint_path: ${diffusion_model_ckpt}    # load weights if available
   key: model
-  use_ema: true
+  use_ema: false
 
 vae_model:
   _target_: utils.model_utils.load_model_from_config

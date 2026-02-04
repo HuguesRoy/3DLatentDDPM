@@ -113,7 +113,10 @@ class Tester:
 
             if self.saver:
                 self.saver.save_batch(
-                    batch_idx, test_loader.batch_size, output_dict, sample_indices
+                    batch_idx=batch_idx,
+                    batch_size=dict_ord["image"].shape[0],
+                    output_dict=output_dict,
+                    sample_indices=sample_indices,
                 )
 
             if self.metric_handler:

@@ -72,8 +72,11 @@ class SDE(nn.Module):
         c_noise = self.schedule.c_noise(sigma)
 
         # Predict residual f
-        print((c_in).shape)
-        f_pred = self.network(c_in * x, c_noise.view(-1,))
+        if self.loss_type == "noise":
+            n = self.network(c_in * x, c_noise.view(-1,))
+            f_pred = ((x - n) - c_skip * x) / c_out
+        else:
+            f_pred = self.network(c_in * x, c_noise.view(-1,))
 
         # EDM denoiser
         d_pred = c_skip * x + c_out * f_pred
@@ -84,7 +87,9 @@ class SDE(nn.Module):
         return drift
 
     @torch.no_grad()
-    def sample_ode(self, batch_size, H=128,W =128, sigma_min=0.002, sigma_max=80, steps=100):
+    def sample_ode(
+        self, batch_size, data_ndim, sigma_min=0.002, sigma_max=80, steps=100
+    ):
         """
         Classical EDM probability-flow ODE sampler.
         Deterministic DDIM-like sampling.
@@ -95,26 +100,20 @@ class SDE(nn.Module):
         device = next(self.network.parameters()).device
 
         # Create noise schedule
-        sigmas = []
-        for t in torch.linspace(0, 1, steps, device=device):
-            s = self.schedule.time_steps(t)
-            sigmas.append(s)
-        sigmas = torch.stack(sigmas).view(steps, 1, 1, 1, 1)  # [steps,1,1,1,1]
+        times = torch.linspace(0., 1.0, steps, device=device)
+        sigma_steps = self.schedule.time_steps(times).view(steps, *([1] * (data_ndim)))
 
         # Initial sample x_T = sigma_max * N(0, I)
-        x = sigmas[0] * torch.randn(batch_size, 1, H, W, device=device)
+        x = sigma_steps[0] * torch.randn(batch_size,*([1] * (data_ndim)), device=device)
 
         # ODE solve: Euler integration
         for i in range(steps - 1):
-            sigma_i = sigmas[i]
-            sigma_next = sigmas[i + 1]
-            d_sigma = sigma_next - sigma_i
-
-            # EDM drift: dx/dsigma
-            drift = self.drift(x, sigma_i)
-
-            # Euler step
-            x = x + drift * d_sigma
+            
+            sigma_i = sigma_steps[i]  # shape: [1, 1, ..., 1]
+            sigma_next = sigma_steps[i + 1]  # shape: [1, 1, ..., 1]
+            ds = sigma_next - sigma_i  # [1, 1, ..., 1]
+            drift = self.drift(x, sigma_i)  # dx/dsigma
+            x = x + drift * ds  # Euler step
 
         return x
     
