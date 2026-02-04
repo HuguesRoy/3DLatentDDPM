@@ -3,8 +3,8 @@ _target_: models.vp_sde.predictor.LDPredictor
 
 predictor_config:
   pfode: true
-  time_star: 0.7
-  inference_steps: 150
+  time_star: 0.6
+  inference_steps: 200
   device: ${device}
 
 diffusion_model:

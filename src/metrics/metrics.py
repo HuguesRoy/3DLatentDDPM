@@ -92,8 +92,6 @@ class BestDiceIntensity:
         self.num_processes = num_processes
 
     def __call__(self, pred, target):
-        # --- Threshold with mode
-
         if isinstance(pred, torch.Tensor):
             preds = pred.detach().cpu().numpy()
         else:
@@ -108,14 +106,20 @@ class BestDiceIntensity:
         if targets.dtype == np.bool_:
             targets = targets.astype(np.float32)
 
-        thresholds = np.linspace(preds.max(), preds.min(), self.n_threshold)
+        thresholds = np.linspace(preds.min(), preds.max(), self.n_threshold)
 
         with Pool(self.num_processes) as pool:
             fn = partial(_dice_multiprocessing, preds, targets)
             scores = pool.map(fn, thresholds)
 
-        scores = np.stack(scores, 0)
-        return scores.max()
+        scores = np.asarray(scores, dtype=float)
+
+        # If everything is NaN, define Dice = 0.0 for this sample
+        if np.all(np.isnan(scores)):
+            return 0.0
+
+        return np.nanmax(scores)
+
 
 
 class DiceScore:
