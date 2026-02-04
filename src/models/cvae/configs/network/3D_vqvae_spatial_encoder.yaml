@@ -1,0 +1,9 @@
+_target_: architectures.architectures3d.Encoder3d
+latent_dim: ${model.model_config.latent_dim}
+n_blocks: 5
+n_subblocks: 1
+activation: silu
+block: conv
+joint_network: null
+cond_mod_network: null
+flatten: false

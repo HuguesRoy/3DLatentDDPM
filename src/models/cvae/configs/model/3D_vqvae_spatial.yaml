@@ -1,0 +1,24 @@
+
+defaults:
+  - /network/3D_vqvae_spatial_encoder@encoder
+  - /network/3D_vqvae_spatial_decoder@decoder
+  - _self_
+
+_target_: pythae.models.VQVAE
+
+model_config:
+  _target_: pythae.models.VQVAEConfig
+  main_modality: pet_linear
+  input_dim: 
+    _target_: tuple
+    args: [1, 169, 208, 179]
+  latent_dim: 256 
+  commitment_loss_factor: 0.25
+  quantization_loss_factor: 2
+  num_embeddings: 512
+  use_ema: true
+  decay: 0.99
+  uses_default_encoder: false
+  uses_default_decoder: false
+  data_type: 3d 
+
