@@ -32,7 +32,7 @@ class NoiseSchedule(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def sample_t_sigma(self, x: torch.Tensor) -> torch.Tensor:
+    def sample_sigma(self, x: torch.Tensor) -> torch.Tensor:
         """
         Sample sigma for training (usually per batch element).
 
@@ -105,9 +105,9 @@ class EDMSchedule(NoiseSchedule):
     
     # Sampling 
 
-    def time_steps(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+    def time_steps(self, step : Union[torch.Tensor, float]) -> torch.Tensor:
         # can be scalar or tensor (in [0,1])
-        t_tensor = torch.as_tensor(t, dtype=torch.float32)
+        t_tensor = torch.as_tensor(step, dtype=torch.float32)
         # broadcast-friendly powers:
         smax_rho = self.sigma_max ** (1.0 / self.rho)
         smin_rho = self.sigma_min ** (1.0 / self.rho)
@@ -141,7 +141,7 @@ class EDMSchedule(NoiseSchedule):
     def c_in(self, sigma):
         return self.mean_factor(sigma)
 
-    def c_noise(self,sigma,t):
+    def c_noise(self,sigma):
         return 0.25 * torch.log(sigma) 
 
 
@@ -162,6 +162,11 @@ class VPLinearSchedule(NoiseSchedule):
         self.epsilon = float(epsilon)
         self.M = int(M)
 
+    def time_steps(self, step: Union[torch.Tensor, float]) -> torch.Tensor:
+
+        t_i = 1 + step * (self.epsilon - 1)
+        return self.sigma(t_i)
+
     def sigma(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
         # t in [0, 1]
         t_tensor = torch.as_tensor(t, dtype=torch.float32)
@@ -173,8 +178,29 @@ class VPLinearSchedule(NoiseSchedule):
         alpha_bar = torch.exp(-beta_bar)
         sigma = torch.sqrt(torch.clamp(1.0 - alpha_bar, min=1e-20))
         return sigma
+    
+    def sigma_inv(self, sigma: torch.Tensor) -> torch.Tensor:
+        """
+        Closed-form sigma inv for VP with linear beta schedule.
 
-    def sample_t_sigma(self, x: torch.Tensor) -> torch.Tensor:
+        Input:
+            sigma: noise level in (0, 1), any shape.
+        Output:
+            corresponding time.
+        """
+        # Clamp to avoid log(0)
+        sigma2 = torch.clamp(sigma**2, max=1.0 - 1e-12)
+        beta_bar = -torch.log(1.0 - sigma2)  # ≥ 0
+
+        a = 0.5 * (self.beta_max - self.beta_min)
+        b = self.beta_min
+
+        disc = b * b + 4.0 * a * beta_bar
+        t = (-b + torch.sqrt(disc)) / (2.0 * a)
+
+        return t.clamp(0.0, 1.0)
+
+    def sample_sigma(self, x: torch.Tensor) -> torch.Tensor:
         """
         Sample t \sim Uniform(0, 1) per batch element and map to \sigma(t).
 
@@ -185,8 +211,7 @@ class VPLinearSchedule(NoiseSchedule):
         t = self.epsilon + (1.0 - self.epsilon) * torch.rand(
             shape, device=x.device, dtype=x.dtype
         )
-
-        return t, self.sigma(t)
+        return self.sigma(t)
     
     def loss_weight(self, sigma: torch.Tensor):
         return 1/sigma**2
@@ -202,5 +227,6 @@ class VPLinearSchedule(NoiseSchedule):
     def c_in(self, sigma: torch.Tensor):
         return 1/torch.sqrt(sigma**2 + 1.)
 
-    def c_noise(self, sigma: torch.Tensor, t : torch.Tensor):
+    def c_noise(self, sigma: torch.Tensor):
+        t = self.sigma_inv(sigma)
         return t * (self.M - 1)

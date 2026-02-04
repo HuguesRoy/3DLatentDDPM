@@ -19,20 +19,18 @@ class SDE(nn.Module):
 
 
     def _init_config(self,model_config):
-        self.loss_type = model_config.loss_types
+        self.loss_type = model_config.loss_type
 
     def train_step(self, dict_ord):
 
         x = dict_ord["image"]
 
-        print(x.shape)
-        t, sigma = self.schedule.sample_t_sigma(x)
-        t = t.to(x.device)
-        sigma = sigma.to(x.device)
+        sigma = self.schedule.sample_sigma(x).to(x.device)
+
         c_skip = self.schedule.c_skip(sigma)
         c_out = self.schedule.c_out(sigma)
         c_in = self.schedule.c_in(sigma)
-        c_noise = self.schedule.c_noise(sigma, t)
+        c_noise = self.schedule.c_noise(sigma)
 
         noise = torch.randn_like(x)
 
@@ -41,8 +39,7 @@ class SDE(nn.Module):
         f_pred = self.network(c_in * x_noise, c_noise.view(-1,))
 
         
-
-        if self.losse_type == "score":
+        if self.loss_type == "score":
             f_target = (x - c_skip * x_noise) / c_out
             loss_weight = self.schedule.loss_weight(sigma)
 
@@ -51,7 +48,7 @@ class SDE(nn.Module):
             loss = (loss_weight * mse).mean()
         elif self.loss_type == "noise":
             reduce_dims = tuple(range(1, f_pred.ndim))
-            mse = (noise - f_target).pow(2).mean(dim=reduce_dims)
+            mse = (f_pred - noise).pow(2).mean(dim=reduce_dims)
             loss = mse.mean()
 
 
@@ -75,6 +72,7 @@ class SDE(nn.Module):
         c_noise = self.schedule.c_noise(sigma)
 
         # Predict residual f
+        print((c_in).shape)
         f_pred = self.network(c_in * x, c_noise.view(-1,))
 
         # EDM denoiser
@@ -121,43 +119,54 @@ class SDE(nn.Module):
         return x
     
     @torch.no_grad()
-    def sample_ode_from_xt(self, x_t, sigma, steps=4):
+    def sample_ode_from_xt(self, x_t, t_star, steps=4):
         """
         Deterministic EDM ODE sampler applied locally around (x_t, sigma).
 
         Inputs:
             x_t   : noisy input at noise level sigma (B,C,H,W)
-            sigma : (B,1,1,1) noise level corresponding to t
+            t_star : starting time [1.,0]
             steps : number of small ODE refinement steps
 
         Output:
             x0 : deterministic reconstruction through local ODE integration
         """
 
-        # Make a list of noise levels from sigma -> sigma_min
-        # but only refine locally with small strides
-        sigma_scalar = sigma.view(-1)[0].item()   # extract value
-        sigma_min = self.schedule.sigma_min
-
-        # For small steps, linearly interpolate σ
-        sigma_steps = torch.linspace(
-            sigma_scalar, sigma_min, steps, device=x_t.device
-        ).view(-1, 1, 1, 1)
+        device = x_t.device
+        batch_size = x_t.shape[0]
+        data_ndim = x_t.ndim - 1
+        times = torch.linspace(t_star, 1., steps, device=x_t.device)
+        sigma_steps = self.schedule.time_steps(times).view(steps, *([1] * (data_ndim)))
 
         x = x_t.clone()
 
         for i in range(steps - 1):
 
-            sigma_i = sigma_steps[i].view(x.shape[0],1,1,1)
-            sigma_next = sigma_steps[i+1].view(x.shape[0],1,1,1)
-            ds = sigma_next - sigma_i
-
+            sigma_i = sigma_steps[i]           # shape: [1, 1, ..., 1]
+            sigma_next = sigma_steps[i + 1]    # shape: [1, 1, ..., 1]
+            ds = sigma_next - sigma_i          # [1, 1, ..., 1]
             drift = self.drift(x, sigma_i)   # dx/dsigma
             x = x + drift * ds               # Euler step
 
         return x
+    
+    def sample_from_x0_t(self, x0, t_star, steps = 100, pfode = True):
 
+        batch_size = x0.shape[0]
+        data_ndim = x0.ndim - 1
+        
+        sigma_scalar = self.schedule.time_steps(t_star).to(x0.device)
+        # [1, 1, ..., 1]
+        sigma_base = sigma_scalar.view(1, *([1] * data_ndim))
+        # [B, 1, ..., 1]
+        sigma_t = sigma_base.expand(batch_size, *([1] * data_ndim))
 
+        x_t = x0 + sigma_t * torch.randn_like(x0)
 
-
+        if pfode:
+            x  = self.sample_ode_from_xt(x_t, t_star, steps=steps)
+        else:
+            x  = self.sample_sde_from_xt(x_t, sigma_t, steps=steps)
+        
+        return x
     

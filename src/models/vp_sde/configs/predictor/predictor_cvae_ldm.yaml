@@ -1,0 +1,22 @@
+
+_target_: models.vp_sde.predictor.LDPredictor
+
+predictor_config:
+  pfode: true
+  time_star: 0.7
+  inference_steps: 150
+  device: ${device}
+
+diffusion_model:
+  _target_: utils.model_utils.load_model_from_config
+  cfg_path: ${diffusion_model_cfg}                        # pull from defaults
+  checkpoint_path: ${diffusion_model_ckpt}    # load weights if available
+  key: model
+  use_ema: true
+
+vae_model:
+  _target_: utils.model_utils.load_model_from_config
+  cfg_path: ${vae_model_cfg}                        # pull from defaults
+  checkpoint_path: ${vae_model_ckpt}    # load weights if available
+  key: model_state_dict
+  use_ema: false

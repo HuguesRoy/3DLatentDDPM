@@ -52,3 +52,5 @@ src/**/configs/local/*
 /outputs/
 src/outputs/
 src/logs/
+environment.yml
+src/test_func/outputs/

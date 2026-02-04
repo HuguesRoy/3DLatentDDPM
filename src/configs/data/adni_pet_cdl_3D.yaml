@@ -1,6 +1,6 @@
 data_train:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: default_pet-linear_18FFDG_cerebellumPons2_coregiso_cropped 
+  conversion_arg: all_pet_coregiso_cropped
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
   data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/train.tsv
@@ -22,7 +22,7 @@ data_train:
 
 data_val:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: default_pet-linear_18FFDG_cerebellumPons2_coregiso_cropped 
+  conversion_arg: all_pet_coregiso_cropped
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
   data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
@@ -41,3 +41,30 @@ data_val:
         out_min_max: [0, 1]
     extraction: 
       _target_: clinicadl.transforms.extraction.Image
+
+data_test:
+  _target_: utils.factories.CapsDataset_with_conversion
+  conversion_arg: all_pet_coregiso_cropped
+
+  caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
+  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
+
+  preprocessing:
+    _target_: clinicadl.data.datatypes.PETLinear
+    tracer: 18FFDG
+    suvr_reference_region: cerebellumPons2
+    use_uncropped_image: false
+    reconstruction: coregiso
+
+  transforms:
+    _target_: clinicadl.transforms.Transforms
+    image_transforms:
+      - _target_: data.preprocessing.Hypometabolism
+        mask_dir: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/masks
+        pathology: AD
+        percentage: 30
+      - _target_: clinicadl.transforms.config.RescaleIntensityConfig
+        out_min_max: [0, 1]
+    extraction: 
+      _target_: clinicadl.transforms.extraction.Image
+
