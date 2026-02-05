@@ -1,7 +1,7 @@
 defaults:
-  - best_dice_intensity
-  - average_precision
-  - mse
-  - ssim 
-  - ahmse 
-  - ahssim 
+  - mask_best_dice_intensity
+  - mask_average_precision
+  - mask_mse
+  - mask_ssim 
+  - mask_ahmse 
+  - mask_ahssim 

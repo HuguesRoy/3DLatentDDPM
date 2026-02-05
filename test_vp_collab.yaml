@@ -20,7 +20,7 @@ defaults:
 
 wrapper:
   seg_key: hypo_mask
-  mask_key: null
+  mask_key: mni_icbm152_t1_tal_nlin_sym_09c_mask_cropped
   seg_threshold: 0.90
   mode_threshold: less
   original_image_key: original_image

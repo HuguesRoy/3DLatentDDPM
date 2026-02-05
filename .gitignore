@@ -54,3 +54,6 @@ src/outputs/
 src/logs/
 environment.yml
 src/test_func/outputs/
+
+# Files for local tests
+test_cvae_local_AS.yaml

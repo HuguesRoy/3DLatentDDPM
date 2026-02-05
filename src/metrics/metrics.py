@@ -47,10 +47,16 @@ def _dice_multiprocessing(
 
 
 class AveragePrecision:
-    def __init__(self,):
+    def __init__(self,in_mask=False):
         self.name = "average_precision"
         self.prediction = "anomaly_map"
         self.target = "seg_mask"
+
+        if in_mask:
+            self.name = "average_precision_in_brain_mask"
+            self.prediction = "anomaly_map_in_brain_mask"
+            self.target = "seg_mask_in_brain_mask"
+
 
     def __call__(self, pred, target):
         # Convert torch -> numpy
@@ -83,11 +89,16 @@ class AveragePrecision:
 
 class BestDiceIntensity:
     def __init__(
-        self, n_threshold=100, num_processes=4,
+        self, n_threshold=100, num_processes=4,in_mask=False
     ):
         self.name = "best_dice_intensity"
         self.prediction = "anomaly_map"
         self.target = "seg_mask"
+
+        if in_mask:
+            self.name = "best_dice_intensity_in_brain_mask"
+            self.prediction = "anomaly_map_in_brain_mask"
+            self.target = "seg_mask_in_brain_mask"
 
         self.n_threshold = n_threshold
         self.num_processes = num_processes
@@ -151,54 +162,71 @@ class DiceScore:
 
 class MSE():
 
-    def __init__(self):
+    def __init__(self, in_mask=False):
 
         self.name = "mse"
-
         self.prediction = "reconstruction"
         self.target = "x"
+
+        if in_mask:
+            self.name = "mse_in_brain_mask"
+            self.prediction = "mask_reconstruction"
+            self.target = "mask_x"
 
     def __call__(self, pred, target):
 
         return torch.mean((pred - target) ** 2).item()
     
+    
 class SSIM():
 
-    def __init__(self):
+    def __init__(self, in_mask=False):
 
         self.name = "ssim"
-
         self.prediction = "reconstruction"
         self.target = "x"
+
+        if in_mask:
+            self.name = "ssim_in_brain_mask"
+            self.prediction = "mask_reconstruction"
+            self.target = "mask_x"
 
     def __call__(self, pred, target):
         # add batch dimension
         return ssim(pred.unsqueeze(0),target.unsqueeze(0)).item()
+    
 
 
 class ahMSE():
     """MSE between the pseudo healthy reconstruction and the true healthy (for simulated datasets)"""
 
-    def __init__(self):
+    def __init__(self, in_mask=False):
 
         self.name = "ahMSE"
-
         self.prediction = "reconstruction"
         self.target = "true_healthy"
+
+        if in_mask:
+            self.name = "ahMSE_in_brain_mask"
+            self.prediction = "mask_reconstruction"
+            self.target = "mask_true_healthy"
 
     def __call__(self, pred, target):
 
         return torch.mean((pred - target) ** 2).item()
 
-
 class ahSSIM():
 
-    def __init__(self):
+    def __init__(self, in_mask=False):
 
         self.name = "ahSSIM"
-
         self.prediction = "reconstruction"
         self.target = "true_healthy"
+
+        if in_mask:
+            self.name = "ahSSIM_in_brain_mask"
+            self.prediction = "mask_reconstruction"
+            self.target = "mask_true_healthy"
 
     def __call__(self, pred, target):
         # add batch dimension
