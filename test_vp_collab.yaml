@@ -1,0 +1,41 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PROJECT_ROOT}/src/configs
+    - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
+  run:
+    dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/experiments
+
+log_dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/logs
+
+
+defaults:
+  - predictor: predictor_cvae_ldm
+  - tester: default
+  - data: adni_pet_cdl_3D
+  - metrics: colab # add more metrics
+  - dataloader: clinicadl
+  - wrapper: clinicadl
+  - saver: save_adni_pet
+  - _self_
+
+wrapper:
+  seg_key: hypo_mask
+  mask_key: null
+  seg_threshold: 0.90
+  mode_threshold: less
+  original_image_key: original_image
+
+
+dataloader:
+  test_loader:
+    batch_size: 5
+    prefetch_factor: 2
+    num_workers: 5
+
+device: cuda
+
+diffusion_model_cfg: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/.hydra/config.yaml
+diffusion_model_ckpt: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/checkpoints/epoch_1000.pt
+
+vae_model_cfg: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/cvae_flat_256_10/256_config_2025-10-24_00-04-38.yaml
+vae_model_ckpt: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/cvae_flat_256_10/CVAE_training_2025-10-24_00-04-38/final_model/model.pt

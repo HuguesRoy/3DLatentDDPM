@@ -1,0 +1,11 @@
+
+_target_: models.cvae.predictor.CVAEPredictor
+
+vae_model:
+  _target_: utils.model_utils.load_model_from_config
+  cfg_path: ${vae_model_cfg}                        # pull from defaults
+  checkpoint_path: ${vae_model_ckpt}    # load weights if available
+  key: model_state_dict
+  use_ema: false
+
+device: ${device}

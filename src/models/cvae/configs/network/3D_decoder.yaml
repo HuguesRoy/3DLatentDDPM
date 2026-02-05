@@ -2,7 +2,7 @@ _target_: mvae_ad.architectures.Decoder3d
 latent_dim: ${model.model_config.latent_dim}
 n_blocks: 5
 n_subblocks: 1
-activation: relu
+activation: silu
 block: conv
 last_conv: True
 hidden_dims: [256,32]

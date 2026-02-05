@@ -1,9 +1,9 @@
 data_train:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: all_pet_coregiso_cropped
+  conversion_arg: coregiso
 
-  caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/train.tsv
+  caps_directory: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025
+  data: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025/splits_dsb/5_fold/split-3/train.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -22,10 +22,10 @@ data_train:
 
 data_val:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: all_pet_coregiso_cropped
+  conversion_arg: coregiso
 
-  caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
+  caps_directory: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025
+  data: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025/splits_dsb/5_fold/split-3/train.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -44,10 +44,10 @@ data_val:
 
 data_test:
   _target_: utils.factories.CapsDataset_with_conversion
-  conversion_arg: all_pet_coregiso_cropped
+  conversion_arg: coregiso
 
-  caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
+  caps_directory: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025
+  data: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025/splits_dsb/5_fold/split-3/train.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -60,7 +60,7 @@ data_test:
     _target_: clinicadl.transforms.Transforms
     image_transforms:
       - _target_: data.preprocessing.Hypometabolism
-        mask_dir: /lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/masks
+        mask_dir: /home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025/masks
         pathology: AD
         percentage: 50
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
@@ -70,4 +70,4 @@ data_test:
 
   masks:
     _target_: utils.config_utils.make_list
-    object: ["/lustre/fswork/projects/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025/masks/mni_icbm152_t1_tal_nlin_sym_09c_mask_cropped.nii"]
+    object: ["/home/asenella/UAD/shared_dir/datasets/adni/caps/caps_pet_uniform_v2025/masks/mni_icbm152_t1_tal_nlin_sym_09c_mask_cropped.nii"]

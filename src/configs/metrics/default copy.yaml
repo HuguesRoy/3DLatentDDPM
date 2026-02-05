@@ -1,4 +1,0 @@
-defaults:
-  - dice_score
-  - best_dice_intensity
-  - average_precision

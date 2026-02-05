@@ -1,0 +1,7 @@
+defaults:
+  - best_dice_intensity
+  - average_precision
+  - mse
+  - ssim 
+  - ahmse 
+  - ahssim 

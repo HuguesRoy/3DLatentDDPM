@@ -100,8 +100,10 @@ class Tester:
             output_dict["x"] = dict_ord["image"]
             output_dict["seg"] = dict_ord["seg"]
             output_dict["seg_mask"] = dict_ord["seg_mask"]
-            if hasattr(dict_ord,"true_healthy"):
+
+            if 'true_healthy' in dict_ord:
                 output_dict["true_healthy"] = dict_ord["true_healthy"]
+                
 
             sample_indices = dict_ord.get(
                 "index",
