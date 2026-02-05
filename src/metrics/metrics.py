@@ -162,16 +162,11 @@ class DiceScore:
 
 class MSE():
 
-    def __init__(self, in_mask=False):
+    def __init__(self, mask_extension=""):
 
-        self.name = "mse"
-        self.prediction = "reconstruction"
-        self.target = "x"
-
-        if in_mask:
-            self.name = "mse_in_brain_mask"
-            self.prediction = "mask_reconstruction"
-            self.target = "mask_x"
+        self.name = mask_extension + "mse"
+        self.prediction = mask_extension +"reconstruction"
+        self.target = mask_extension +"x"
 
     def __call__(self, pred, target):
 
@@ -180,16 +175,11 @@ class MSE():
     
 class SSIM():
 
-    def __init__(self, in_mask=False):
+    def __init__(self, mask_extension=""):
 
-        self.name = "ssim"
-        self.prediction = "reconstruction"
-        self.target = "x"
-
-        if in_mask:
-            self.name = "ssim_in_brain_mask"
-            self.prediction = "mask_reconstruction"
-            self.target = "mask_x"
+        self.name = mask_extension + "ssim"
+        self.prediction = mask_extension + "reconstruction"
+        self.target = mask_extension + "x"
 
     def __call__(self, pred, target):
         # add batch dimension
@@ -200,16 +190,12 @@ class SSIM():
 class ahMSE():
     """MSE between the pseudo healthy reconstruction and the true healthy (for simulated datasets)"""
 
-    def __init__(self, in_mask=False):
+    def __init__(self, mask_extension=""):
 
-        self.name = "ahMSE"
-        self.prediction = "reconstruction"
-        self.target = "true_healthy"
+        self.name = mask_extension + "ahMSE"
+        self.prediction = mask_extension + "reconstruction"
+        self.target = mask_extension + "true_healthy"
 
-        if in_mask:
-            self.name = "ahMSE_in_brain_mask"
-            self.prediction = "mask_reconstruction"
-            self.target = "mask_true_healthy"
 
     def __call__(self, pred, target):
 
@@ -217,16 +203,12 @@ class ahMSE():
 
 class ahSSIM():
 
-    def __init__(self, in_mask=False):
+    def __init__(self, mask_extension=""):
 
-        self.name = "ahSSIM"
-        self.prediction = "reconstruction"
-        self.target = "true_healthy"
+        self.name = mask_extension + "ahSSIM"
+        self.prediction = mask_extension + "reconstruction"
+        self.target = mask_extension + "true_healthy"
 
-        if in_mask:
-            self.name = "ahSSIM_in_brain_mask"
-            self.prediction = "mask_reconstruction"
-            self.target = "mask_true_healthy"
 
     def __call__(self, pred, target):
         # add batch dimension

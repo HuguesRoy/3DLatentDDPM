@@ -101,19 +101,25 @@ class Tester:
             output_dict["seg"] = dict_ord["seg"]
             output_dict["seg_mask"] = dict_ord["seg_mask"]
 
-            # Add masked versions of x,reconstruction to compute metrics
-            # inside the mask
+            # Add masked version of anomaly map 
             if 'mask' in dict_ord:
-                for key in ['x','reconstruction']:
-                    output_dict[f'mask_{key}'] = output_dict[key]*dict_ord['mask'].to(output_dict[key])
-                
                 # Extract pixels inside the brain mask 
                 output_dict['anomaly_map_in_brain_mask'] = output_dict['anomaly_map'][dict_ord['mask'].bool()].reshape(len(batch),-1)
                 output_dict['seg_mask_in_brain_mask'] = output_dict['seg_mask'][dict_ord['mask'].bool()].reshape(len(batch),-1)
             
+            # Add masked versions of x,reconstruction to compute metrics
+            # inside the mask
+            for key in ['x','reconstruction']:
+                output_dict[f'seg_mask_{key}'] = output_dict[key]*dict_ord['seg_mask'].to(output_dict[key])
+                if 'mask' in dict_ord:
+                    output_dict[f'mask_{key}'] = output_dict[key]*dict_ord['mask'].to(output_dict[key])
+
+
             # Add true_healthy in the output for simulated datasets
             if 'true_healthy' in dict_ord:
                 output_dict["true_healthy"] = dict_ord["true_healthy"]
+                output_dict['seg_mask_true_healthy'] = output_dict['true_healthy']*dict_ord['seg_mask'].to(output_dict['true_healthy'])
+
                 if 'mask' in dict_ord:
                     output_dict['mask_true_healthy'] = output_dict['true_healthy']*dict_ord['mask'].to(output_dict['true_healthy'])
 

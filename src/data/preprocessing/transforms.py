@@ -160,7 +160,8 @@ class Hypometabolism(tio.IntensityTransform):
                 f"Mask file for pathology '{self.pathology}' not found at {mask_path}."
             )
         mask_nii = nib.load(mask_path)
-        self.mask = self._mask_processing(mask_nii.get_fdata())
+        self.binary_mask = mask_nii.get_fdata()
+        self.mask = self._mask_processing(self.binary_mask)
 
         self.args_names = ["mask_dir", "pathology", "percentage", "sigma"]
 
@@ -180,6 +181,14 @@ class Hypometabolism(tio.IntensityTransform):
             ),
             "hypo_mask",
         )
+        transformed.add_mask(
+            tio.LabelMap(
+                tensor=np.expand_dims(self.binary_mask, axis=0),
+                affine=datapoint.image.affine,
+            ),
+            "binary_hypo_mask",
+        )
+                
         transformed["pathology"] = self.pathology
         transformed["percentage"] = self.percentage
 
