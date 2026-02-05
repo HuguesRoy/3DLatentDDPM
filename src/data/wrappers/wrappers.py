@@ -99,7 +99,8 @@ class ClinicaDLWrapper:
         seg_key: Optional[str] = None,
         label_key: Optional[str] = None,
         seg_threshold = 0,
-        mode_threshold = "greater"
+        mode_threshold = "greater",
+        original_image_key: Optional[str] = None
     ):
         self.device = device
         self.image_key = image_key
@@ -109,6 +110,7 @@ class ClinicaDLWrapper:
 
         self.seg_threshold = seg_threshold
         self.mode_threshold = mode_threshold
+        self.original_image_key = original_image_key
 
     def __call__(self, batch: Dict) -> Dict:
         output = {}
@@ -151,6 +153,12 @@ class ClinicaDLWrapper:
             else None
         )
 
+        # Optional original image
+        if self.original_image_key:
+            try:
+                output["true_healthy"] = batch.get_field(self.original_image_key).to(self.device)
+            except KeyError:
+                pass
         # Metadata (not moved to device)
         for meta_key in ["participant_id", "session_id"]:
             if meta_key in batch:

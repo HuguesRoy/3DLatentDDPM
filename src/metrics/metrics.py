@@ -3,6 +3,7 @@ from sklearn.metrics import average_precision_score
 from multiprocessing import Pool
 import numpy as np
 from functools import partial
+from .utils_ssim import ssim
 
 import logging
 
@@ -160,6 +161,45 @@ class MSE():
     def __call__(self, pred, target):
 
         return torch.mean((pred - target) ** 2).item()
+    
+class SSIM():
+
+    def __init__(self):
+
+        self.name = "ssim"
+
+        self.prediction = "reconstruction"
+        self.target = "x"
+
+    def __call__(self, pred, target):
+        # add batch dimension
+        return ssim(pred.unsqueeze(0),target.unsqueeze(0)).item()
 
 
+class ahMSE():
+    """MSE between the pseudo healthy reconstruction and the true healthy (for simulated datasets)"""
 
+    def __init__(self):
+
+        self.name = "ahMSE"
+
+        self.prediction = "reconstruction"
+        self.target = "true_healthy"
+
+    def __call__(self, pred, target):
+
+        return torch.mean((pred - target) ** 2).item()
+
+
+class ahSSIM():
+
+    def __init__(self):
+
+        self.name = "ahSSIM"
+
+        self.prediction = "reconstruction"
+        self.target = "true_healthy"
+
+    def __call__(self, pred, target):
+        # add batch dimension
+        return ssim(pred.unsqueeze(0),target.unsqueeze(0)).item()

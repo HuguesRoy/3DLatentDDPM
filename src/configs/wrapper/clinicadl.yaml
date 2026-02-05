@@ -4,3 +4,4 @@ image_key: image
 mask_key: null
 seg_key: null
 label_key: null
+original_image_key: original_image # for simulated AD - retrieve true healthy
