@@ -213,3 +213,24 @@ class ahSSIM():
     def __call__(self, pred, target):
         # add batch dimension
         return ssim(pred.unsqueeze(0),target.unsqueeze(0)).item()
+    
+
+class AnomalyScore():
+
+    def __init__(self, on_normalized=False, in_mask=False):
+
+        self.name = 'anomaly_score'
+        self.target = 'x'
+        self.prediction = 'anomaly_map'
+
+        if on_normalized:
+            self.prediction = "norm_" + self.prediction
+        if in_mask:
+            self.prediction = self.prediction + "_in_brain_mask"
+
+
+    def __call__(self, pred, target):
+
+        return torch.mean(pred).item()
+    
+    
