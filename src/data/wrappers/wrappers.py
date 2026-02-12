@@ -207,3 +207,32 @@ class TransformMultiVae(BaseWrapper):
             embeddings = (self.transform(data["image"])).embedding
             data["image"] = embeddings.unsqueeze(1)
         return data
+
+class TransformMultiVaeVQVAE(BaseWrapper):
+    def __init__(self, base_wrapper: BaseWrapper, transform: nn.Module, use_quantizer: bool = True):
+        self.base_wrapper = base_wrapper
+        self.transform = transform
+        self.transform.to(base_wrapper.device)
+        self.transform.eval()
+
+        self.use_quantizer = use_quantizer
+
+    def __call__(self, batch):
+        data = self.base_wrapper(batch)
+        with torch.no_grad():
+
+            embeddings = (self.transform.encoder(data["image"])).embedding
+
+            if self.use_quantizer:
+                embeddings, reshape_for_decoding = self.transform._reshape_for_quantizer(
+                    embeddings, self.transform.model_config
+                )
+
+                quantizer_output = self.transform.quantizer(embeddings, uses_ddp=False)
+
+                quantized_embed = quantizer_output.quantized_vector
+
+                data["image"] = quantized_embed
+            else:
+                data["image"] = embeddings
+        return data

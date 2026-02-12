@@ -1,1 +1,6 @@
-from .wrappers import ClinicaDLWrapper, BratsDataWrapper, TransformMultiVae
+from .wrappers import (
+    ClinicaDLWrapper,
+    BratsDataWrapper,
+    TransformMultiVae,
+    TransformMultiVaeVQVAE,
+)

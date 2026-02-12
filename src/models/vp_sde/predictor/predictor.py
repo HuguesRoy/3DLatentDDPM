@@ -36,11 +36,11 @@ class LDPredictor:
     def predict(self, dict_ord):
         x = dict_ord["image"].to(self.device)
 
-        # print(x.dtype)
+        #print(x.dtype)
         #print(f"vmin: {x.min().item()}, vmax : {x.max().item()}")
-        # output = self.vae_model.predict(x, use_mean_embedding = True)
-        # x_r = output.pet_linear
-        # z = output.embedding
+        #output = self.vae_model.predict(x, use_mean_embedding = True)
+        #x_r = output.pet_linear
+        #z = output.embedding
 
         #print(f"vmin: {x_r.min().item()}, vmax : {x_r.max().item()}")
         
@@ -48,7 +48,7 @@ class LDPredictor:
         z = self.vae_model.encoder(x).embedding
         z = z.unsqueeze(1)
         z_r = self.diffusion_model.sample_from_x0_t(
-           z, self.time_star, steps=self.inference_steps, pfode=self.pfode
+            z, self.time_star, steps=self.inference_steps, pfode=self.pfode
         )
         z_r = z_r.squeeze(1)
         x_r = self.vae_model.decoder(z_r, cond_mods = None).reconstruction

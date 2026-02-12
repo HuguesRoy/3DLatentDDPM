@@ -10,7 +10,7 @@ model_config:
   _target_: pythae.models.VQVAEConfig
   main_modality: pet_linear
   input_dim: 
-    _target_: tuple
+    _target_: utils.hydra_utils.convert_to_tuple
     args: [1, 169, 208, 179]
   latent_dim: 256 
   commitment_loss_factor: 0.25

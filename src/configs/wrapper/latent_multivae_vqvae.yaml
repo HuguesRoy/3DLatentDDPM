@@ -1,0 +1,14 @@
+# Wraps a base data wrapper + a transform (e.g. encoder)
+defaults:
+  - clinicadl@base_wrapper
+
+_target_: data.wrappers.TransformMultiVaeVQVAE
+
+transform:
+  _target_: utils.model_utils.load_model_from_config
+  cfg_path: ${model_wrapper_trans}                        # pull from defaults
+  checkpoint_path: ${checkpoint_wrapper_trans}    # load weights if available
+  key: ${key_wrapper_trans}
+  use_ema: false
+
+use_quantizer: True

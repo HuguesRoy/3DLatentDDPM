@@ -1,4 +1,4 @@
-name: meduad_mvae
+name: meduad_mvae_vq
 channels:
   - conda-forge
 dependencies:
