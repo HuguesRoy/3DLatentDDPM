@@ -3,9 +3,9 @@ hydra:
     - file://${oc.env:PROJECT_ROOT}/src/configs
     - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
   run:
-    dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/experiments_AS_MS
+    dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/experiments/tstar_${predictor.predictor_config.time_star}
 
-log_dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/logs_AS_MS
+log_dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm/2026-02-04_14-59-55/experiments/tstar_${predictor.predictor_config.time_star}
 
 
 defaults:

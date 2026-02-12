@@ -1,0 +1,41 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PROJECT_ROOT}/src/configs
+    - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
+  run:
+    dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm_3D/2026-02-11_09-37-46/experiments/tstar_${predictor.predictor_config.time_star}
+
+log_dir: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm_3D/2026-02-11_09-37-46/logs
+
+
+defaults:
+  - predictor: predictor_cvae_ldm3d
+  - tester: default
+  - data: adni_pet_cdl_3D
+  - metrics: colab # add more metrics
+  - dataloader: clinicadl
+  - wrapper: clinicadl
+  - saver: save_adni_pet
+  - _self_
+
+wrapper:
+  seg_key: binary_hypo_mask
+  mask_key: mni_icbm152_t1_tal_nlin_sym_09c_mask_cropped
+  seg_threshold: 0.90
+  mode_threshold: greater
+  original_image_key: original_image
+
+
+dataloader:
+  test_loader:
+    batch_size: 5
+    prefetch_factor: 2
+    num_workers: 5
+
+device: cuda
+
+diffusion_model_cfg: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm_3D/2026-02-11_09-37-46/.hydra/config.yaml
+diffusion_model_ckpt: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vp_ddpm_3D/2026-02-11_09-37-46/checkpoints/epoch_1000.pt
+
+vae_model_cfg: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vqvae_spatial/vqvae_spatial_config_2026-01-23_17-22-51.yaml
+vae_model_ckpt: /lustre/fswork/projects/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET/trained_models/vqvae_spatial/VQVAE_training_2026-01-23_17-22-51/final_model/model.pt
