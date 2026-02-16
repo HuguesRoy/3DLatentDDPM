@@ -5,4 +5,4 @@ defaults:
 _target_: models.vp_sde.model.SDE
 
 model_config:
-  loss_type: noise
+  loss_type: score

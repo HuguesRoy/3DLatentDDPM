@@ -24,7 +24,7 @@ class SDE(nn.Module):
     def train_step(self, dict_ord):
 
         x = dict_ord["image"]
-
+        
         sigma = self.schedule.sample_sigma(x).to(x.device)
 
         c_skip = self.schedule.c_skip(sigma)
@@ -59,11 +59,17 @@ class SDE(nn.Module):
         return loss
     
     @torch.no_grad()
-    def drift(self, x, sigma):
+    def drift(self, x, t):
         """
         EDM probability-flow ODE drift:
             dx/dsigma = -(d(x,sigma) - x) / sigma
         """
+
+        sigma = self.schedule.sigma(t)
+        sigma_derivative = self.schedule.sigma_derivative(t)
+        scaling = self.schedule.scaling(t)
+        scaling_derivative = self.schedule.scaling_derivative(t)
+
 
         # Get EDM coefficients
         c_skip = self.schedule.c_skip(sigma)
@@ -73,16 +79,24 @@ class SDE(nn.Module):
 
         # Predict residual f
         if self.loss_type == "noise":
-            n = self.network(c_in * x, c_noise.view(-1,))
+            n = self.network(c_in * x / scaling, c_noise.view(-1,))
             f_pred = ((x - n) - c_skip * x) / c_out
         else:
-            f_pred = self.network(c_in * x, c_noise.view(-1,))
+            f_pred = self.network(
+                c_in * x / scaling,
+                c_noise.view(
+                    -1,
+                ),
+            )
 
         # EDM denoiser
-        d_pred = c_skip * x + c_out * f_pred
+        d_pred = c_skip * x / scaling + c_out * f_pred
 
         # Probability-flow ODE drift
-        drift = (x - d_pred) / (sigma + 1e-6)
+
+        drift_1 = (sigma_derivative/sigma + scaling_derivative/scaling) * x
+        drift_2 = - sigma_derivative * scaling * d_pred / sigma
+        drift = drift_1 + drift_2
 
         return drift
 
@@ -134,18 +148,20 @@ class SDE(nn.Module):
         device = x_t.device
         batch_size = x_t.shape[0]
         data_ndim = x_t.ndim - 1
-        times = torch.linspace(t_star, 1., steps, device=x_t.device)
-        sigma_steps = self.schedule.time_steps(times).view(steps, *([1] * (data_ndim)))
+        times = torch.linspace(t_star, 1.0, steps, device=x_t.device).view(
+            steps, *([1] * (data_ndim))
+        )
 
         x = x_t.clone()
 
         for i in range(steps - 1):
+            
+            time_i = times[i]  # shape: [1, 1, ..., 1]
+            time_next= times[i + 1]  # shape: [1, 1, ..., 1]
 
-            sigma_i = sigma_steps[i]           # shape: [1, 1, ..., 1]
-            sigma_next = sigma_steps[i + 1]    # shape: [1, 1, ..., 1]
-            ds = sigma_next - sigma_i          # [1, 1, ..., 1]
-            drift = self.drift(x, sigma_i)   # dx/dsigma
-            x = x + drift * ds               # Euler step
+            dt = time_next - time_i          # [1, 1, ..., 1]
+            drift = self.drift(x, time_i)   
+            x = x + drift * dt               # Euler step
 
         return x
     
@@ -165,7 +181,7 @@ class SDE(nn.Module):
         if pfode:
             x  = self.sample_ode_from_xt(x_t, t_star, steps=steps)
         else:
-            x  = self.sample_sde_from_xt(x_t, sigma_t, steps=steps)
+            x = self.sample_sde_from_xt(x_t, t_star, steps=steps)
         
         return x
     

@@ -167,6 +167,14 @@ class VPLinearSchedule(NoiseSchedule):
         t_i = 1 + step * (self.epsilon - 1)
         return self.sigma(t_i)
 
+    def beta_t(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        t_tensor = torch.as_tensor(t, dtype=torch.float32)
+
+        return (
+            self.beta_min
+            + (self.beta_max - self.beta_min) * t_tensor
+        )
+
     def sigma(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
         # t in [0, 1]
         t_tensor = torch.as_tensor(t, dtype=torch.float32)
@@ -175,10 +183,33 @@ class VPLinearSchedule(NoiseSchedule):
             self.beta_min * t_tensor
             + 0.5 * (self.beta_max - self.beta_min) * t_tensor**2
         )
-        alpha_bar = torch.exp(-beta_bar)
-        sigma = torch.sqrt(torch.clamp(1.0 - alpha_bar, min=1e-20))
+        alpha_bar = torch.exp(beta_bar)
+        sigma = torch.sqrt(torch.clamp(alpha_bar-1, min=1e-20))
         return sigma
-    
+
+    def sigma_derivative(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        t_tensor = torch.as_tensor(t, dtype=torch.float32)
+
+        sigma_t = self.sigma(t)
+
+        return 0.5 * self.beta_t(t_tensor) * (sigma_t**2 + 1) / sigma_t
+
+        
+    def scaling(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        # t in [0, 1]
+        t_tensor = torch.as_tensor(t, dtype=torch.float32)
+
+        beta_bar = (
+            self.beta_min * t_tensor
+            + 0.5 * (self.beta_max - self.beta_min) * t_tensor**2
+        )
+        alpha_bar = torch.exp(beta_bar)
+        return 1 / torch.sqrt(torch.clamp(alpha_bar, min=1e-20))
+
+    def scaling_derivative(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+
+        return - 0.5 * self.beta_t(t) * self.scaling(t)
+
     def sigma_inv(self, sigma: torch.Tensor) -> torch.Tensor:
         """
         Closed-form sigma inv for VP with linear beta schedule.
