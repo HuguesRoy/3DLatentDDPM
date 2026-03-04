@@ -4,7 +4,7 @@ import torch.nn as nn
 
 log = logging.getLogger(__name__)
 
-class LDPredictor3D:
+class VAEPredictor3D:
     def __init__(
         self,
         diffusion_model : nn.Module,
@@ -36,32 +36,9 @@ class LDPredictor3D:
     def predict(self, dict_ord):
         x = dict_ord["image"].to(self.device)
 
-        #print(x.dtype)
-        #print(f"vmin: {x.min().item()}, vmax : {x.max().item()}")
-        #output = self.vae_model.predict(x, use_mean_embedding = True)
-        #x_r = output.pet_linear
-        #z = output.embedding
-
-        #print(f"vmin: {x_r.min().item()}, vmax : {x_r.max().item()}")
-        
-
-        z = self.vae_model.encoder(x).embedding
-
-        z_r = self.diffusion_model.sample_from_x0_t(
-            z, self.time_star, steps=self.inference_steps, pfode=self.pfode
-        )
-        z_r = z_r.squeeze(1)
-
-        if not self.diff_use_quantizer: 
-            z_r, _ = self.vae_model._reshape_for_quantizer(
-                z_r, self.vae_model.model_config
-            )
-
-            quantizer_output = self.vae_model.quantizer(z_r, uses_ddp=False)
-
-            z_r = quantizer_output.quantized_vector
-
-        x_r = self.vae_model.decoder(z_r, cond_mods = None).reconstruction
+        output = self.vae_model.predict(x, use_mean_embedding = True)
+        x_r = output.pet_linear
+        z = output.embedding
 
         anomaly_maps = (x_r - x).abs()
 

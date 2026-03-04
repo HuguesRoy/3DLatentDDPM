@@ -1,5 +1,5 @@
 
-_target_: models.vp_sde.predictor.LDPredictor3D
+_target_: models.vp_sde.vae_predictor3d.VAEPredictor3D
 
 predictor_config:
   pfode: true
