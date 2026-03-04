@@ -3,8 +3,8 @@ _target_: models.vp_sde.predictor.LDPredictor3D
 
 predictor_config:
   pfode: true
-  time_star: 0.7
-  inference_steps: 200
+  time_star: 0.4
+  inference_steps: 100
   device: ${device}
   diff_use_quantizer: false
 

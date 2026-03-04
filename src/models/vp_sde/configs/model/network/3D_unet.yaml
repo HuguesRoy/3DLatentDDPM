@@ -1,7 +1,7 @@
 _target_: models.vp_sde.model.networks.UNet3DModel
 
-dim : 128
-init_dim : 128
+dim : 64
+init_dim : 64
 out_dim : null
 dim_mults : [1, 2, 3]
 channels : 256

@@ -35,21 +35,14 @@ class SDE(nn.Module):
         noise = torch.randn_like(x)
 
         x_noise = x + sigma * noise
-
-        f_pred = self.network(c_in * x_noise, c_noise.view(-1,))
-
         
-        if self.loss_type == "score":
+        if self.loss_type == "edm_loss":
+            f_pred = self.network(c_in * x_noise, c_noise.view(-1,))
             f_target = (x - c_skip * x_noise) / c_out
             loss_weight = self.schedule.loss_weight(sigma)
 
-            reduce_dims = tuple(range(1, f_pred.ndim))
-            mse = (f_pred - f_target).pow(2).mean(dim=reduce_dims)
-            loss = (loss_weight * mse).mean()
-        elif self.loss_type == "noise":
-            reduce_dims = tuple(range(1, f_pred.ndim))
-            mse = (f_pred - noise).pow(2).mean(dim=reduce_dims)
-            loss = mse.mean()
+            mse = (f_pred - f_target).pow(2)
+            loss = (loss_weight * c_out.pow(2) * mse).mean()
 
 
         if not torch.isfinite(loss):
@@ -78,19 +71,16 @@ class SDE(nn.Module):
         c_noise = self.schedule.c_noise(sigma)
 
         # Predict residual f
-        if self.loss_type == "noise":
-            n = self.network(c_in * x / scaling, c_noise.view(-1,))
-            f_pred = ((x - n) - c_skip * x) / c_out
-        else:
+        if self.loss_type == "edm_loss":
+
             f_pred = self.network(
                 c_in * x / scaling,
                 c_noise.view(
                     -1,
                 ),
             )
+            d_pred = c_skip * x / scaling + c_out * f_pred
 
-        # EDM denoiser
-        d_pred = c_skip * x / scaling + c_out * f_pred
 
         # Probability-flow ODE drift
 
@@ -101,38 +91,44 @@ class SDE(nn.Module):
         return drift
 
     @torch.no_grad()
-    def sample_ode(
-        self, batch_size, data_ndim, sigma_min=0.002, sigma_max=80, steps=100
-    ):
+    def sample_ode(self, batch_size : int = 1, dims : tuple =  (1,16), steps=10, device="cuda"):
         """
-        Classical EDM probability-flow ODE sampler.
-        Deterministic DDIM-like sampling.
+        Deterministic EDM ODE sampler.
 
-        Returns:
-            x0 : sampled images (N,C,H,W)
+        Inputs:
+            batch_size : batch size
+            dim :
+            steps : number of small ODE refinement steps
+
+        Output:
+            x0 : deterministic reconstruction through local ODE integration
         """
-        device = next(self.network.parameters()).device
+        data_ndim = len(dims)
 
-        # Create noise schedule
-        times = torch.linspace(0., 1.0, steps, device=device)
-        sigma_steps = self.schedule.time_steps(times).view(steps, *([1] * (data_ndim)))
+        ratios = torch.linspace(0,1,steps, device=device)
+        times = self.schedule.time_steps(ratios)
+        sigmas = self.schedule.sigma(times)
+        times_hat = self.schedule.sigma_inv(sigmas).view(steps,)
 
-        # Initial sample x_T = sigma_max * N(0, I)
-        x = sigma_steps[0] * torch.randn(batch_size,*([1] * (data_ndim)), device=device)
+        times_hat = torch.cat([times_hat, torch.zeros_like(times_hat[:1])])
+        sigma0 = self.schedule.sigma(times_hat[0])
 
-        # ODE solve: Euler integration
+        s0 = self.schedule.scaling(times_hat[0])
+        x = torch.randn(batch_size, *dims, device=device) * sigma0 * s0
+
+
         for i in range(steps - 1):
             
-            sigma_i = sigma_steps[i]  # shape: [1, 1, ..., 1]
-            sigma_next = sigma_steps[i + 1]  # shape: [1, 1, ..., 1]
-            ds = sigma_next - sigma_i  # [1, 1, ..., 1]
-            drift = self.drift(x, sigma_i)  # dx/dsigma
-            x = x + drift * ds  # Euler step
+            time_i = times_hat[i]  # shape: [1, 1, ..., 1]
+            time_next = times_hat[i + 1]  # shape: [1, 1, ..., 1]
 
+            dt = time_next - time_i          # [1, 1, ..., 1]
+            drift = self.drift(x, time_i) 
+            x = x + drift * dt               # Euler step
         return x
     
     @torch.no_grad()
-    def sample_ode_from_xt(self, x_t, t_star, steps=4):
+    def sample_ode_from_xt(self, x_0, t_star, steps=4):
         """
         Deterministic EDM ODE sampler applied locally around (x_t, sigma).
 
@@ -145,43 +141,70 @@ class SDE(nn.Module):
             x0 : deterministic reconstruction through local ODE integration
         """
 
-        device = x_t.device
-        batch_size = x_t.shape[0]
-        data_ndim = x_t.ndim - 1
-        times = torch.linspace(t_star, 1.0, steps, device=x_t.device).view(
-            steps, *([1] * (data_ndim))
+        device = x_0.device
+        ratios = torch.linspace(t_star, 1, steps, device=device)
+        times = self.schedule.time_steps(ratios)
+        sigmas = self.schedule.sigma(times)
+        times_hat = self.schedule.sigma_inv(sigmas).view(
+            steps,
         )
 
-        x = x_t.clone()
+        sigma0 = self.schedule.sigma(times_hat[0])
+
+        s0 = self.schedule.scaling(times_hat[0])
+        x = torch.randn_like(x_0) * sigma0 * s0 + x_0 * s0
 
         for i in range(steps - 1):
-            
-            time_i = times[i]  # shape: [1, 1, ..., 1]
-            time_next= times[i + 1]  # shape: [1, 1, ..., 1]
+            time_i = times_hat[i]  # shape: [1, 1, ..., 1]
+            time_next = times_hat[i + 1]  # shape: [1, 1, ..., 1]
 
-            dt = time_next - time_i          # [1, 1, ..., 1]
-            drift = self.drift(x, time_i)   
-            x = x + drift * dt               # Euler step
-
+            dt = time_next - time_i  # [1, 1, ..., 1]
+            drift = self.drift(x, time_i)
+            x = x + drift * dt  # Euler step
         return x
     
-    def sample_from_x0_t(self, x0, t_star, steps = 100, pfode = True):
+    @torch.no_grad()
+    def sample_sde_from_xt(self, x_0, t_star, steps=4):
+        """
+        Stochastic EDM SDE sampler applied locally around (x_t, sigma).
 
-        batch_size = x0.shape[0]
-        data_ndim = x0.ndim - 1
-        
-        sigma_scalar = self.schedule.time_steps(t_star).to(x0.device)
-        # [1, 1, ..., 1]
-        sigma_base = sigma_scalar.view(1, *([1] * data_ndim))
-        # [B, 1, ..., 1]
-        sigma_t = sigma_base.expand(batch_size, *([1] * data_ndim))
+        Inputs:
+            x_t   : noisy input at noise level sigma (B,C,H,W)
+            t_star : starting time [1.,0]
+            steps : number of small ODE refinement steps
 
-        x_t = x0 + sigma_t * torch.randn_like(x0)
+        Output:
+            x0 : deterministic reconstruction through local ODE integration
+        """
+
+        device = x_0.device
+        ratios = torch.linspace(t_star, 1, steps, device=device)
+        times = self.schedule.time_steps(ratios)
+        sigmas = self.schedule.sigma(times)
+        times_hat = self.schedule.sigma_inv(sigmas).view(
+            steps,
+        )
+
+        sigma0 = self.schedule.sigma(times_hat[0])
+
+        s0 = self.schedule.scaling(times_hat[0])
+        x = torch.randn_like(x_0) * sigma0 * s0 + x_0 * s0
+
+        for i in range(steps - 1):
+            time_i = times_hat[i]  # shape: [1, 1, ..., 1]
+            time_next = times_hat[i + 1]  # shape: [1, 1, ..., 1]
+
+            dt = time_next - time_i  # [1, 1, ..., 1]
+            drift = self.drift(x, time_i)
+            x = x + drift * dt  # Euler step
+        return x
+    
+    def sample_from_x0_t(self, x_0, t_star, steps = 100, pfode = True):
 
         if pfode:
-            x  = self.sample_ode_from_xt(x_t, t_star, steps=steps)
+            x = self.sample_ode_from_xt(x_0, t_star, steps=steps)
         else:
-            x = self.sample_sde_from_xt(x_t, t_star, steps=steps)
+            x = self.sample_sde_from_xt(x_0, t_star, steps=steps)
         
         return x
     

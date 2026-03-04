@@ -11,4 +11,4 @@ transform:
   key: ${key_wrapper_trans}
   use_ema: false
 
-use_quantizer: True
+use_quantizer: False

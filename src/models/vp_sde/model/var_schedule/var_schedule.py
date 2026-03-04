@@ -115,17 +115,10 @@ class EDMSchedule(NoiseSchedule):
 
     # Training
 
-    def sample_sigma(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Log-normal sigma sampling, one sigma per batch element.
-
-        Shape: (B, 1, ..., 1) to broadcast over x.
-        """
-        batch = x.shape[0]
-        # Make shape like (B, 1, ..., 1) with same ndims as x
-        shape = (batch,) + (1,) * (x.ndim - 1)
-        eps = torch.randn(shape, device=x.device, dtype=x.dtype)
-        return torch.ones(shape, device= x.device, dtype = x.dtype), torch.exp(self.P_mean + self.P_std * eps)
+    def sample_sigma(self, x):
+        shape = (x.shape[0],) + (1,) * (x.ndim - 1)
+        noise = torch.randn(shape, device=x.device)
+        return torch.exp(self.P_mean + self.P_std*noise)  # return only sigma
 
     def loss_weight(self, sigma: torch.Tensor):
         return (self.sigma_data**2 + sigma**2) / (sigma * self.sigma_data) ** 2
@@ -144,120 +137,94 @@ class EDMSchedule(NoiseSchedule):
     def c_noise(self,sigma):
         return 0.25 * torch.log(sigma) 
 
+import torch
+from typing import Union
 
-class VPLinearSchedule(NoiseSchedule):
+
+class VPLinearSchedule:
     """
-    Variance-Preserving (VP) schedule with linear beta(t):
+    EDM "VP" schedule used in NVlabs EDM ablation sampler.
+
+    sigma(t) = sqrt(exp(0.5*beta_d*t^2 + beta_min*t) - 1)
+    s(t)     = 1 / sqrt(1 + sigma(t)^2)
+
+    beta_d and beta_min are typically chosen to match (sigma_min, sigma_max)
+    over t in [epsilon_s, 1].
     """
 
     def __init__(
         self,
-        beta_min: float = 0.1,
-        beta_max: float = 19.9,
-        M : int = 1000,
-        epsilon: float = 1e-5
-    ) -> None:
+        beta_min: float,
+        beta_max: float,
+        epsilon: float = 1e-3,
+        M: int = 1000,
+    ):
         self.beta_min = float(beta_min)
         self.beta_max = float(beta_max)
-        self.epsilon = float(epsilon)
+        self.epsilon_s = float(epsilon)
         self.M = int(M)
 
-    def time_steps(self, step: Union[torch.Tensor, float]) -> torch.Tensor:
+        beta_d = self.beta_max - self.beta_min
 
-        t_i = 1 + step * (self.epsilon - 1)
-        return self.sigma(t_i)
+        self.beta_d = float(beta_d)
+    
+    def time_steps(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        return 1 + t * (self.epsilon_s -1)
 
     def beta_t(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
-        t_tensor = torch.as_tensor(t, dtype=torch.float32)
-
-        return (
-            self.beta_min
-            + (self.beta_max - self.beta_min) * t_tensor
-        )
+        t = torch.as_tensor(t)
+        return self.beta_min + self.beta_d * t
 
     def sigma(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
-        # t in [0, 1]
-        t_tensor = torch.as_tensor(t, dtype=torch.float32)
-
-        beta_bar = (
-            self.beta_min * t_tensor
-            + 0.5 * (self.beta_max - self.beta_min) * t_tensor**2
-        )
-        alpha_bar = torch.exp(beta_bar)
-        sigma = torch.sqrt(torch.clamp(alpha_bar-1, min=1e-20))
-        return sigma
+        t = torch.as_tensor(t)
+        exponent = 0.5 * self.beta_d * t**2 + self.beta_min * t
+        return torch.sqrt(torch.clamp(torch.exp(exponent) - 1.0, min=1e-20))
 
     def sigma_derivative(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
-        t_tensor = torch.as_tensor(t, dtype=torch.float32)
-
-        sigma_t = self.sigma(t)
-
-        return 0.5 * self.beta_t(t_tensor) * (sigma_t**2 + 1) / sigma_t
-
-        
-    def scaling(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
-        # t in [0, 1]
-        t_tensor = torch.as_tensor(t, dtype=torch.float32)
-
-        beta_bar = (
-            self.beta_min * t_tensor
-            + 0.5 * (self.beta_max - self.beta_min) * t_tensor**2
-        )
-        alpha_bar = torch.exp(beta_bar)
-        return 1 / torch.sqrt(torch.clamp(alpha_bar, min=1e-20))
-
-    def scaling_derivative(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
-
-        return - 0.5 * self.beta_t(t) * self.scaling(t)
+        t = torch.as_tensor(t)
+        sigma = self.sigma(t)
+        return 0.5 * self.beta_t(t) * (sigma + 1.0 / sigma)
 
     def sigma_inv(self, sigma: torch.Tensor) -> torch.Tensor:
-        """
-        Closed-form sigma inv for VP with linear beta schedule.
-
-        Input:
-            sigma: noise level in (0, 1), any shape.
-        Output:
-            corresponding time.
-        """
-        # Clamp to avoid log(0)
-        sigma2 = torch.clamp(sigma**2, max=1.0 - 1e-12)
-        beta_bar = -torch.log(1.0 - sigma2)  # ≥ 0
-
-        a = 0.5 * (self.beta_max - self.beta_min)
-        b = self.beta_min
-
-        disc = b * b + 4.0 * a * beta_bar
-        t = (-b + torch.sqrt(disc)) / (2.0 * a)
-
+        sigma = torch.as_tensor(sigma)
+        disc = self.beta_min**2 + 2.0 * self.beta_d * torch.log(
+            torch.clamp(sigma**2 + 1.0, min=1.0)
+        )
+        t = (torch.sqrt(disc) - self.beta_min) / self.beta_d
         return t.clamp(0.0, 1.0)
 
-    def sample_sigma(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Sample t \sim Uniform(0, 1) per batch element and map to \sigma(t).
+    def scaling(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        t = torch.as_tensor(t)
+        sigma = self.sigma(t)
+        return 1.0 / torch.sqrt(1.0 + sigma**2)
 
-        Shape: (B, 1, ..., 1) to broadcast over x.
-        """
+    def scaling_derivative(self, t: Union[torch.Tensor, float]) -> torch.Tensor:
+        t = torch.as_tensor(t)
+        sigma = self.sigma(t)
+        sigma_d = self.sigma_derivative(t)
+        s = 1.0 / torch.sqrt(1.0 + sigma**2)
+        return -sigma * sigma_d * (s**3)
+
+    def sample_sigma(self, x: torch.Tensor) -> torch.Tensor:
+        # sample t form Uniform(eps, 1)
         batch = x.shape[0]
         shape = (batch,) + (1,) * (x.ndim - 1)
-        t = self.epsilon + (1.0 - self.epsilon) * torch.rand(
+        t = self.epsilon_s + (1.0 - self.epsilon_s) * torch.rand(
             shape, device=x.device, dtype=x.dtype
         )
         return self.sigma(t)
-    
-    def loss_weight(self, sigma: torch.Tensor):
-        return 1/sigma**2
 
-    # Network and preconditioning
-
-    def c_skip(self, sigma: torch.Tensor):
+    def c_skip(self, sigma: torch.Tensor) -> torch.Tensor:
         return torch.ones_like(sigma)
 
-    def c_out(self, sigma: torch.Tensor):
-        return - sigma
+    def c_out(self, sigma: torch.Tensor) -> torch.Tensor:
+        return -sigma
 
-    def c_in(self, sigma: torch.Tensor):
-        return 1/torch.sqrt(sigma**2 + 1.)
+    def c_in(self, sigma: torch.Tensor) -> torch.Tensor:
+        return 1.0 / torch.sqrt(1.0 + sigma**2)
 
-    def c_noise(self, sigma: torch.Tensor):
-        t = self.sigma_inv(sigma)
-        return t * (self.M - 1)
+    def c_noise(self, sigma: torch.Tensor) -> torch.Tensor:
+        return (self.M - 1) * self.sigma_inv(sigma)
+
+    def loss_weight(self, sigma: torch.Tensor) -> torch.Tensor:
+        return 1.0 / (sigma**2)
