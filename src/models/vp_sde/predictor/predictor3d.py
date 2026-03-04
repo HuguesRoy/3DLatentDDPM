@@ -50,8 +50,15 @@ class LDPredictor3D:
         z_r = self.diffusion_model.sample_from_x0_t(
             z, self.time_star, steps=self.inference_steps, pfode=self.pfode
         )
-        z_r = z_r.squeeze(1)
-        x_r = self.vae_model.decoder(z_r, cond_mods = None).reconstruction
+        embeddings, reshape_for_decoding = self.vae_model._reshape_for_quantizer(
+            z_r, self.vae_model.model_config
+        )
+
+        embeddings = self.vae_model.quantizer(
+            embeddings, uses_ddp=False
+        ).quantized_vector
+        
+        x_r = self.vae_model.decoder(embeddings, cond_mods=None).reconstruction
 
         anomaly_maps = (x_r - x).abs()
 
