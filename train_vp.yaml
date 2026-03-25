@@ -3,7 +3,7 @@ hydra:
     - file://${oc.env:PROJECT_ROOT}/src/configs
     - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
   run:
-    dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/${split}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/${split}
 
 log_dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/logs
 
