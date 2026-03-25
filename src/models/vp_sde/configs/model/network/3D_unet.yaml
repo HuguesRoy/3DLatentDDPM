@@ -1,10 +1,10 @@
 _target_: models.vp_sde.model.networks.UNet3DModel
 
-dim : 64
-init_dim : 64
+dim : 256
+init_dim : 256
 out_dim : null
 dim_mults : [1, 2, 3]
-channels : 256
+channels : 64
 self_condition : False
 resnet_block_groups : 4
 n_block_klass : 2

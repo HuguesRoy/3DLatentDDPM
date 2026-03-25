@@ -3,7 +3,7 @@ data_train:
   conversion_arg: all_pet_coregiso_cropped
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/train.tsv
+  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-${split}/train.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -17,7 +17,7 @@ data_train:
     image_transforms:
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
         out_min_max: [0, 1]
-    extraction: 
+    extraction:
       _target_: clinicadl.transforms.extraction.Image
 
 data_val:
@@ -25,7 +25,7 @@ data_val:
   conversion_arg: all_pet_coregiso_cropped
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
+  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-${split}/validation_baseline.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -39,7 +39,7 @@ data_val:
     image_transforms:
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
         out_min_max: [0, 1]
-    extraction: 
+    extraction:
       _target_: clinicadl.transforms.extraction.Image
 
 data_test:
@@ -47,7 +47,7 @@ data_test:
   conversion_arg: all_pet_coregiso_cropped
 
   caps_directory: /gpfswork/rech/krk/commun/datasets/adni/caps/caps_pet_uniform_v2025
-  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-3/validation_baseline.tsv
+  data: /lustre/fswork/projects/rech/krk/commun/anomdetect/tsv_files/adni/adni_fdg_pet/splits_dsb_coregavg/5_fold/split-${split}/validation_baseline.tsv
 
   preprocessing:
     _target_: clinicadl.data.datatypes.PETLinear
@@ -65,7 +65,7 @@ data_test:
         percentage: 30
       - _target_: clinicadl.transforms.config.RescaleIntensityConfig
         out_min_max: [0, 1]
-    extraction: 
+    extraction:
       _target_: clinicadl.transforms.extraction.Image
 
   masks:

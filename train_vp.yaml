@@ -1,0 +1,45 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PROJECT_ROOT}/src/configs
+    - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
+  run:
+    dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/${split}/${now:%Y-%m-%d_%H-%M-%S}
+
+log_dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/logs
+
+defaults:
+  - callbacks/model_checkpoint
+  - callbacks/logger
+  - model: vp_sde_3D
+  - trainer: default
+  - data: adni_pet_cdl_3D
+  - dataloader: clinicadl
+  - optimizer: adamW
+  - wrapper: latent_multivae_vqvae
+  - ema: default
+  - _self_
+
+trainer:
+  train_config:
+    n_epoch: 1500
+    accumulate_grad_batches: 1
+    clip_grad_norm: 10.
+
+dataloader:
+  train_loader:
+    batch_size: 5
+    prefetch_factor: 2
+    num_workers: 5
+
+device: cuda
+
+wrapper:
+  use_quantizer: False
+
+split: ??
+
+model_wrapper_trans: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/vqvae_spatial_config.yaml
+checkpoint_wrapper_trans:
+  _target_: utils.mvae_utils.get_model_from_hydra_path
+  hydra_path: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/${split}
+key_wrapper_trans: model_state_dict
