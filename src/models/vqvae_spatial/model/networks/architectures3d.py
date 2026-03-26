@@ -198,8 +198,8 @@ class Encoder3d(BaseJointEncoder):
 
     def forward(self, x):
         try:
-            x_pet = x["pet_linear"]
-        except IndexError:
+            x_pet = x["image"]
+        except (IndexError, TypeError):
             x_pet = x
 
         h = self.image_network(x_pet)

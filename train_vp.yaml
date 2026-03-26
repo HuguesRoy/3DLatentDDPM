@@ -3,9 +3,9 @@ hydra:
     - file://${oc.env:PROJECT_ROOT}/src/configs
     - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
   run:
-    dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/${split}
+    dir: /lustre/fsn1/projects/rech/krk/uqo89gi/projects/colab/models/${now:%Y-%m-%d_%H-%M-%S}/latent_ddpm/vqvae_spatial/${split}
 
-log_dir: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vq_vae_spatial/logs
+log_dir: /lustre/fsn1/projects/rech/krk/uqo89gi/projects/colab/models/${now:%Y-%m-%d_%H-%M-%S}/latent_ddpm/vqvae_spatial/logs
 
 defaults:
   - callbacks/model_checkpoint

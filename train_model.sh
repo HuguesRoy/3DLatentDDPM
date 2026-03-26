@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=LDM_train
 #SBATCH --output=logs/train%j.out
-#SBATCH --constraint=v100
+#SBATCH --constraint=a100
 #SBATCH --ntasks=1
 #SBATCH --array=0-4
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
-#SBATCH --account=krk@v100
-#SBATCH --qos=qos_gpu-t3
-#SBATCH --time=10:00:00
+#SBATCH --account=krk@a100
+#SBATCH --qos=qos_gpu_a100-t3
+#SBATCH --time=08:00:00
 
 # Activate your conda environment
 module load miniforge
