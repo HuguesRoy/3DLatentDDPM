@@ -1,5 +1,6 @@
-import torch
 import logging
+
+import torch
 import torch.nn as nn
 
 log = logging.getLogger(__name__)
@@ -13,11 +14,15 @@ class LDPredictor3D:
     ):
         self._init_config(predictor_config)
 
+        print("We're here in init")
+
         self.vae_model = vae_model
         self.vae_model.eval()
 
         self.diffusion_model = diffusion_model
         self.diffusion_model.eval()
+
+        print("We've finished init")
 
     def _init_config(self, predictor_config):
 
@@ -26,7 +31,7 @@ class LDPredictor3D:
         self.inference_steps = predictor_config.inference_steps
         self.device = predictor_config.device
         self.diff_use_quantizer = predictor_config.diff_use_quantizer
-        
+
     def to(self, device):
         self.vae_model.to(device)
         self.diffusion_model.to(device)
@@ -43,7 +48,7 @@ class LDPredictor3D:
         #z = output.embedding
 
         #print(f"vmin: {x_r.min().item()}, vmax : {x_r.max().item()}")
-        
+
 
         z = self.vae_model.encoder(x).embedding
 
@@ -57,7 +62,7 @@ class LDPredictor3D:
         embeddings = self.vae_model.quantizer(
             embeddings, uses_ddp=False
         ).quantized_vector
-        
+
         x_r = self.vae_model.decoder(embeddings, cond_mods=None).reconstruction
 
         anomaly_maps = (x_r - x).abs()

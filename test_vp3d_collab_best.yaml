@@ -36,10 +36,9 @@ predictor:
 
 device: cuda
 split: 0
-epoch: 1000
 
 diffusion_model_cfg: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vqvae_spatial/${split}/.hydra/config.yaml
-diffusion_model_ckpt: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vqvae_spatial/${split}/checkpoints/epoch_${epoch}.pt
+diffusion_model_ckpt: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/latent_ddpm/vqvae_spatial/${split}/best_loss/best.pt
 
 vae_model_cfg: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/vqvae_spatial_config.yaml
 vae_model_ckpt: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/${split}/VQVAE_training_2026-03-25_19-55-03/final_model/model.pt
