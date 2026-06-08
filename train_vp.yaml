@@ -3,16 +3,14 @@ hydra:
     - file://${oc.env:PROJECT_ROOT}/src/configs
     - file://${oc.env:PROJECT_ROOT}/src/models/vp_sde/configs
   run:
-    dir: /lustre/fsn1/projects/rech/krk/uqo89gi/projects/colab/models/${now:%Y-%m-%d_%H-%M-%S}/latent_ddpm/vqvae_spatial/${split}
-
-log_dir: /lustre/fsn1/projects/rech/krk/uqo89gi/projects/colab/models/${now:%Y-%m-%d_%H-%M-%S}/latent_ddpm/vqvae_spatial/logs
+    dir: /lustre/fsn1/projects/rech/krk/uqo89gi/projects/spie-jmi-2026/latent_ddpm/2026-06-04_10-29-22/  
 
 defaults:
   - callbacks/model_checkpoint
   - callbacks/logger
   - model: vp_sde_3D
   - trainer: default
-  - data: adni_pet_cdl_3D
+  - data: adni_pet_spie_jmi_2026_cdl_3D
   - dataloader: clinicadl
   - optimizer: adamW
   - wrapper: latent_multivae_vqvae
@@ -21,7 +19,7 @@ defaults:
 
 trainer:
   train_config:
-    n_epoch: 1500
+    n_epoch: 1001
     accumulate_grad_batches: 1
     clip_grad_norm: 10.
 
@@ -30,16 +28,19 @@ dataloader:
     batch_size: 5
     prefetch_factor: 2
     num_workers: 5
+    drop_last: true
+  val_loader:
+    drop_last: false
 
 device: cuda
 
 wrapper:
   use_quantizer: False
 
-split: ??
+split: 0
 
-model_wrapper_trans: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/vqvae_spatial_config.yaml
+model_wrapper_trans: /gpfswork/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET_SPIE_JMI_2026/trained_models/vqvae_spatial_64/vqvae_spatial_config.yaml
 checkpoint_wrapper_trans:
   _target_: utils.mvae_utils.get_model_from_hydra_path
-  hydra_path: /lustre/fswork/projects/rech/uwe/ute94bq/shared_dir/models/journal/vqvae_spatial/${split}
+  hydra_path: /gpfswork/rech/krk/commun/anomdetect/latent_DDPM/ADNI_PET_SPIE_JMI_2026/trained_models/vqvae_spatial_64
 key_wrapper_trans: model_state_dict
